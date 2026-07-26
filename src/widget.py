@@ -2,24 +2,13 @@ from datetime import datetime
 
 
 def mask_account_card(card: str) -> str:
-    """Функция принимает на вход номер карты или счет и возвращает его маску."""
-    digits = "".join(filter(str.isdigit, str(card)))
-    masked_digits = digits[:4] + " " + digits[4:6] + "**" + " " + "****" + " " + digits[-4:]
-    if not digits.isdigit() or len(digits) < 4:
-        return "INVALID"
-    if "Visa Platinum" in card:
-        return f"Visa Platinum {masked_digits}"
-    if "Visa Gold" in card:
-        return f"Visa Gold {masked_digits}"
-    if "Visa Classic" in card:
-        return f"Visa Classic {masked_digits}"
-    if "Maestro" in card:
-        return f"Maestro {masked_digits}"
-    if "MasterCard" in card:
-        return f"MasterCard {masked_digits}"
+    """Функция принимает на вход номер карты,счета и возвращает его маску."""
     if "Счет" in card:
-        masked_digits = "**" + digits[-4:]
-    return f"Счет {masked_digits}"
+        number = 2
+        return f"Счет {'*' * number}{card.replace(' ', '')[-4:]}"
+    else:
+        alpha = "".join(char for char in card if not char.isdigit())
+    return f"{alpha} {card[-16:-12]} {card[-12:-10]}{"**"} {"****"} {card[-4:]}"
 
 
 print(mask_account_card("Visa Platinum 7000792289606361"))
