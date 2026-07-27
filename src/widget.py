@@ -1,14 +1,14 @@
 from datetime import datetime
 
+from src.masks import get_mask_account, get_mask_card_number
+
 
 def mask_account_card(card: str) -> str:
     """Функция принимает на вход номер карты,счета и возвращает его маску."""
     if "Счет" in card:
-        number = 2
-        return f"Счет {'*' * number}{card.replace(' ', '')[-4:]}"
+        return get_mask_account(card)
     else:
-        alpha = "".join(char for char in card if not char.isdigit())
-    return f"{alpha} {card[-16:-12]} {card[-12:-10]}{"**"} {"****"} {card[-4:]}"
+        return get_mask_card_number(card)
 
 
 print(mask_account_card("Visa Platinum 7000792289606361"))
