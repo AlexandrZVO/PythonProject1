@@ -1,12 +1,13 @@
-def get_mask_card_number(card, number=4):
+def get_mask_card_number(card: str) -> str:
     """Функция принимает на вход номер карты и возвращает его маску."""
-    return f"{card.replace(' ', '')[0:4]} {card.replace(' ', '')[4:6]}** {'*' * number} {card.replace(' ', '')[-4:]}"
+    alpha = "".join(char for char in card if not char.isdigit())
+    return f"{alpha} {card[-16:-12]} {card[-12:-10]}{"**"} {"****"} {card[-4:]}"
 
-
-def get_mask_account(card, number=2):
+def get_mask_account(card: str) -> str:
     """Функция принимает на вход номер счета и возвращает его маску."""
-    return f"{'*' * number}{card.replace(' ', '')[-4:]}"
+    number = 2
+    return f"Счет {'*' * number}{card.replace(' ', '')[-4:]}"
 
 
-print(get_mask_card_number("7000792289606361"))
-print(get_mask_account("73654108430135874305"))
+#print(get_mask_card_number("7000792289606361"))
+#print(get_mask_account("73654108430135874305"))
