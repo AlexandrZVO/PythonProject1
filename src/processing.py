@@ -22,9 +22,9 @@ print(
 from typing import Dict, List
 
 
-def sort_by_date(data: List[Dict]) -> List[Dict]:
+def sort_by_date(data: List[Dict], reverse: bool = False) -> List[Dict]:
     """функцию, которая принимает список словарей и возвращать новый список, отсортированный по дате"""
-    sorted_data = sorted(data, key=lambda x: x["date"])
+    sorted_data = sorted(data, key=lambda x: x["date"], reverse=reverse)
     return sorted_data
 
 
