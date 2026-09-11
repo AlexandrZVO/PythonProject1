@@ -19,5 +19,5 @@ from src.widget import mask_account_card
         ),  # Карта без пробелов
     ],
 )
-def test_mask_account_card(input_data, expected):
+def test_mask_account_card(input_data: str, expected: str) -> None:
     assert mask_account_card(input_data) == expected

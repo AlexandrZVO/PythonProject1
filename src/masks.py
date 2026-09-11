@@ -1,8 +1,6 @@
-def get_mask_card_number(card_number):
+def get_mask_card_number(card_number: str) -> str:
     # Убеждаемся, что на вход пришла строка
-    digits = "".join(
-        char for char in card_number if char.isdigit()
-    )  # Убираем всё, кроме цифрZ
+    digits = "".join(char for char in card_number if char.isdigit())  # Убираем всё, кроме цифрZ
     if len(digits) != 16:
         return digits
     card_str = str(digits)

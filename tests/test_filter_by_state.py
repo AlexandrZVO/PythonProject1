@@ -3,7 +3,7 @@ import pytest
 from src.processing import filter_by_state
 
 
-def test_filter_by_state_default():
+def test_filter_by_state_default() -> None:
     """Тестовая фильтрация по состоянию 'EXECUTED'."""
     store = [
         {"id": 41428829, "state": "EXECUTED", "date": "2019-07-03T18:35:29.512364"},
@@ -18,7 +18,7 @@ def test_filter_by_state_default():
     assert filter_by_state(store) == expected
 
 
-def test_filter_by_state_custom_state():
+def test_filter_by_state_custom_state() -> None:
     """Тестовая фильтрация по пользовательскому состоянию."""
     store = [
         {"id": 1, "state": "PENDING"},
@@ -29,14 +29,14 @@ def test_filter_by_state_custom_state():
     assert filter_by_state(store, state="PROCESSED") == expected
 
 
-def test_filter_by_state_missing_key():
+def test_filter_by_state_missing_key() -> None:
     """Тест на отсутствие ключа при фильтрации по состоянию"""
     store = [{"id": 1, "date": "2019-07-03T18:35:29.512364"}]
-    expected = []  # элемент без `state` не должен попасть в результат
+    expected: list[str] = []  # элемент без `state` не должен попасть в результат
     assert filter_by_state(store) == expected
 
 
-def test_filter_by_state_none_value():
+def test_filter_by_state_none_value() -> None:
     """Функция, которая проверяет корректность фильтрации объектов по значению None (отсутствию значения) в поле state"""
     store = [{"state": None}, {"state": "EXECUTED"}]
     expected = [{"state": "EXECUTED"}]

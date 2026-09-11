@@ -1,6 +1,8 @@
 from datetime import datetime
 
-def mask_account_card(card):
+
+def mask_account_card(card: str) -> str:
+    # Ваш код здесь
     digits = "".join(
         [char for char in card if char.isdigit() and not char.isspace()]
     )  # извлекает все цифры из строки card и собирает их в одну новую строку
@@ -10,14 +12,11 @@ def mask_account_card(card):
         number = 2
         return f"Счет {'**' + digits[-4:]}"
     if not ("Счёт" in card) and len(str(digits)) == 16:
-        alpha = "".join(
-            char for char in card if not char.isdigit()
-        )  # удаляет все цифры  из строки card
-        return (
-            f"{alpha}{digits[-16:-12]} {digits[-12:-10]}{"**"} {"****"} {digits[-4:]}"
-        )
+        alpha = "".join(char for char in card if not char.isdigit())  # удаляет все цифры  из строки card
+        return f"{alpha}{digits[-16:-12]} {digits[-12:-10]}{"**"} {"****"} {digits[-4:]}"
     if not digits or len(str(digits)) != 16:
         return "неверный формат карты"
+    return ""
 
 
 print(mask_account_card(""))
