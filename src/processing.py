@@ -1,3 +1,6 @@
+from typing import Dict, List
+
+
 def filter_by_state(store: list, state: str = "EXECUTED") -> list:
     """Фильтрует список словарей, оставляя только те, у которых ключ 'state' равен значению `state`."""
     result = []
@@ -31,8 +34,8 @@ print(
 )
 
 
-from datetime import datetime
-from typing import Dict, List
+# from datetime import datetime
+# from typing import Dict, List
 
 
 def sort_by_date(data: List[Dict], reverse: bool = False) -> List[Dict]:

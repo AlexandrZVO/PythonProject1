@@ -9,7 +9,6 @@ def mask_account_card(card: str) -> str:
     if card == "":
         return "None"
     if "Счет" in card:
-        number = 2
         return f"Счет {'**' + digits[-4:]}"
     if not ("Счёт" in card) and len(str(digits)) == 16:
         alpha = "".join(char for char in card if not char.isdigit())  # удаляет все цифры  из строки card
@@ -28,9 +27,6 @@ print(mask_account_card("MasterCard 7158 300734726758"))
 print(mask_account_card("Счет-1234-5678-90"))
 print(mask_account_card("4556364607935616"))
 print(mask_account_card("Счет 646864  7367889ccc4779  589"))
-
-
-from datetime import datetime
 
 
 def get_date(date_str: str) -> str:
