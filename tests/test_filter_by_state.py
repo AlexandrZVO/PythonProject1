@@ -1,4 +1,4 @@
-import pytest
+# import pytest
 
 from src.processing import filter_by_state
 
@@ -37,7 +37,7 @@ def test_filter_by_state_missing_key() -> None:
 
 
 def test_filter_by_state_none_value() -> None:
-    """Функция, которая проверяет корректность фильтрации объектов по значению None (отсутствию значения) в поле state"""
+    """Функция, которая проверяет корректность фильтрации объектов по значению None в поле state"""
     store = [{"state": None}, {"state": "EXECUTED"}]
     expected = [{"state": "EXECUTED"}]
     assert filter_by_state(store, state="EXECUTED") == expected
