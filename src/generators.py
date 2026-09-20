@@ -62,7 +62,26 @@ transactions = [
 ]
 
 
-def filter_by_currency(transactions, currency_code):
+from typing import TypedDict, Generator
+
+# Описываем структуру одной транзакции
+class Transaction(TypedDict):
+    operationAmount: dict
+
+class CurrencyInfo(TypedDict):
+    code: str
+
+class AmountData(TypedDict):
+    currency: CurrencyInfo
+
+# Уточняем структуру, чтобы mypy понимал вложенность
+class TransactionStrict(TypedDict):
+    operationAmount: AmountData
+
+def filter_by_currency(
+    transactions: list[TransactionStrict],
+    currency_code: str
+) -> Generator[TransactionStrict, None, None]:
     for tx in transactions:
         if (
             "operationAmount" in tx
@@ -71,6 +90,7 @@ def filter_by_currency(transactions, currency_code):
             and tx["operationAmount"]["currency"]["code"] == currency_code
         ):
             yield tx
+
 
 
 # Создаём генератор
@@ -126,7 +146,6 @@ def card_number_generator(start: int, stop: int, mode: str = "sequential"):
             formatted_number = f"{block} {block} {block} {block}"
 
         yield formatted_number
-
 
 
 if __name__ == "__main__":

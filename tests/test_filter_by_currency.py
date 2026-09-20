@@ -1,3 +1,5 @@
+import re
+
 import pytest
 
 from src.generators import (card_number_generator, filter_by_currency,
@@ -68,48 +70,48 @@ transactions = [
 
 
 @pytest.fixture
-def usd_transactions():
+def usd_transactions() -> list:  # или collections.abc.Iterator, в зависимости от реализации
     return filter_by_currency(transactions, "USD")
 
 
-def test_filter_by_currency_usd(usd_transactions):
+def test_filter_by_currency_usd(usd_transactions)-> None:
     # Проверяем, что генератор корректно возвращает элементы
     usd_transactions = list(filter_by_currency(transactions, "USD"))
     assert len(usd_transactions) == 3  # или другое ожидаемое количество
 
 
-def test_filter_by_currency_no_matching_transactions():
+def test_filter_by_currency_no_matching_transactions()-> None:
     # Прверяем, если при запросе валюта EUR
     assert len(list(filter_by_currency(transactions, "EUR"))) == 0
 
 
-def test_filter_by_currency_no_such_currency():
+def test_filter_by_currency_no_such_currency()-> None:
     # Проверяем, что генератор корректно обрабатывает несуществующую валюту
     no_currency = filter_by_currency(transactions, "XXX")
     assert next(no_currency, None) is None  # Не должно быть элементов
 
 
-def test_filter_by_currency_missing(usd_transactions):
+def test_filter_by_currency_missing(usd_transactions)-> None:
     # Тест: валюты нет в транзакциях
     result = list(filter_by_currency(usd_transactions, "GBP"))
     assert len(result) == 0  # Итератор пустой — ошибок нет
 
 
-def test_filter_by_currency_empty():
+def test_filter_by_currency_empty()-> None:
     # Тест, создаём пустой список
     usd_transactions = []
     result = list(filter_by_currency(usd_transactions, "USD"))
     assert len(result) == 0
 
 
-def test_transaction_descriptions_empty_list():
+def test_transaction_descriptions_empty_list()-> None:
     # Тест, пустой список
     empty_transactions = []
     result = list(transaction_descriptions(empty_transactions))
     assert result == []
 
 
-def test_transaction_descriptions_order():
+def test_transaction_descriptions_order()-> None:
     # Тест,описания должны возвращаться в правильном порядке
     transactions = [
         {"description": "Перевод организации"},
@@ -126,17 +128,15 @@ def test_transaction_descriptions_order():
 
 
 # Тесты
-def test_pattern_mode_single_value():
+def test_pattern_mode_single_value()-> None:
     """Тест с граничной максимальной границей: 9999 -> 9999 9999 9999 9999"""
     gen_max = card_number_generator(9999, 9999, mode="pattern")
-    assert (
-        next(gen_max) == "9999 9999 9999 9999"
-    ), "Некорректно сгенерирован номер для 9999 в режиме pattern"
+    assert next(gen_max) == "9999 9999 9999 9999", "Некорректно сгенерирован номер для 9999 в режиме pattern"
     with pytest.raises(StopIteration):
         next(gen_max)
 
 
-def test_sequential_mode_small_range():
+def test_sequential_mode_small_range()-> None:
     """Проверка классического режима"""
     gen = card_number_generator(1, 3, mode="sequential")
     assert next(gen) == "0000 0000 0000 0001"
@@ -146,18 +146,13 @@ def test_sequential_mode_small_range():
         next(gen)
 
 
-def test_invalid_range():
+def test_invalid_range()-> None:
     """Проверка ошибки при start > stop"""
     with pytest.raises(ValueError):
         list(card_number_generator(10, 5))
 
 
-import re
-
-import pytest
-
-
-def test_card_format_consistency():
+def test_card_format_consistency()-> None:
     """
     Проверяет корректность форматирования номеров карт.
     Критерии:
@@ -182,9 +177,7 @@ def test_card_format_consistency():
 
         for card_number in gen:
             # 1. Проверка длины строки
-            assert (
-                len(card_number) == 19
-            ), f"Неверная длина номера '{card_number}' (ожидается 19). Режим: {mode}"
+            assert len(card_number) == 19, f"Неверная длина номера '{card_number}' (ожидается 19). Режим: {mode}"
 
             # 2. Проверка формата через регулярное выражение
             # ^ - начало строки, \d{4} - 4 цифры, ( \d{4}){3} - еще три группы "пробел+4цифры", $ - конец строки
