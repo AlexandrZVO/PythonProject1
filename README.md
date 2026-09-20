@@ -55,29 +55,42 @@ poetry add --group dev pytest-cov
               print(get_date("2025-06-20T15:30:45.123456"))
               print(get_date("2025-13-04"))
               print(get_date(""))
+10. Функция filter_by_currency, которая принимает на вход список словарей, представляющих транзакции.
+Вызов функции:print(next(usd_transactions_gen))  # Первое описание
+              print(next(usd_transactions_gen))  # Второе описание
+              print(next(usd_transactions_gen))  # 3 описание
+11. Генератор transaction_descriptions, который принимает список словарей с транзакциями и 
+возвращает описание каждой операции по очереди.
+12. Генератор card_number_generator, который выдает номера банковских карт в формате 
+XXXX XXXX XXXX XXXX, где X — цифра номера карты. Генератор может сгенерировать номера карт в заданном диапазоне от 
+0000 0000 0000 0001 до 9999 9999 9999 9999.
 
 ## Тестирование
 Все тесты расположены в папке tests. Сделаны тестирования с помощью assert, фикстур и параметеризации. 
 Тестирование расположены в файлах: test_filter_by_state.py, test_get_date.py, test_get_mask_account.py,
-test_get_mask_card_number.py, test_mask_account_card.py, test_sort_by_date.py
+test_get_mask_card_number.py, test_mask_account_card.py, test_sort_by_date.py, test_filter_by_currency
 запуск тестирвания всех тестов: введите в терминале pytest
 запуск процента покрытия: введите в терминале pytest --cov
 Итоговый результат тестирования:
+
+Name                                 Stmts   Miss  Cover
 --------------------------------------------------------
 src\__init__.py                          0      0   100%
+src\generators.py                       35      3    91%
 src\masks.py                            20      0   100%
-src\processing.py                       13      0   100%
-src\widget.py                           36      1    97%
+src\processing.py                       12      0   100%
+src\widget.py                           34      1    97%
 test_main.py                             0      0   100%
 tests\__init__.py                        0      0   100%
-tests\test_filter_by_state.py           18      0   100%
-tests\test_get_date.py                  11      0   100%
-tests\test_get_mask_account.py           9      0   100%
-tests\test_get_mask_card_number.py      13      1    92%
+tests\test_filter_by_currency.py        56      0   100%
+tests\test_filter_by_state.py           17      0   100%
+tests\test_get_date.py                  10      0   100%
+tests\test_get_mask_account.py           8      0   100%
+tests\test_get_mask_card_number.py      12      1    92%
 tests\test_mask_account_card.py          5      0   100%
 tests\test_sort_by_date.py              24      0   100%
 --------------------------------------------------------
-TOTAL                                  149      2    99%
+TOTAL                                  233      5    98%
 
 
 ##  Лицензия:
