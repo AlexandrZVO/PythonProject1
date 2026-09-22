@@ -74,44 +74,44 @@ def usd_transactions() -> list:  # или collections.abc.Iterator, в зави�
     return filter_by_currency(transactions, "USD")
 
 
-def test_filter_by_currency_usd(usd_transactions)-> None:
+def test_filter_by_currency_usd(usd_transactions) -> None:
     # Проверяем, что генератор корректно возвращает элементы
     usd_transactions = list(filter_by_currency(transactions, "USD"))
     assert len(usd_transactions) == 3  # или другое ожидаемое количество
 
 
-def test_filter_by_currency_no_matching_transactions()-> None:
+def test_filter_by_currency_no_matching_transactions() -> None:
     # Прверяем, если при запросе валюта EUR
     assert len(list(filter_by_currency(transactions, "EUR"))) == 0
 
 
-def test_filter_by_currency_no_such_currency()-> None:
+def test_filter_by_currency_no_such_currency() -> None:
     # Проверяем, что генератор корректно обрабатывает несуществующую валюту
     no_currency = filter_by_currency(transactions, "XXX")
     assert next(no_currency, None) is None  # Не должно быть элементов
 
 
-def test_filter_by_currency_missing(usd_transactions)-> None:
+def test_filter_by_currency_missing(usd_transactions) -> None:
     # Тест: валюты нет в транзакциях
     result = list(filter_by_currency(usd_transactions, "GBP"))
     assert len(result) == 0  # Итератор пустой — ошибок нет
 
 
-def test_filter_by_currency_empty()-> None:
+def test_filter_by_currency_empty() -> None:
     # Тест, создаём пустой список
     usd_transactions = []
     result = list(filter_by_currency(usd_transactions, "USD"))
     assert len(result) == 0
 
 
-def test_transaction_descriptions_empty_list()-> None:
+def test_transaction_descriptions_empty_list() -> None:
     # Тест, пустой список
     empty_transactions = []
     result = list(transaction_descriptions(empty_transactions))
     assert result == []
 
 
-def test_transaction_descriptions_order()-> None:
+def test_transaction_descriptions_order() -> None:
     # Тест,описания должны возвращаться в правильном порядке
     transactions = [
         {"description": "Перевод организации"},
@@ -128,7 +128,7 @@ def test_transaction_descriptions_order()-> None:
 
 
 # Тесты
-def test_pattern_mode_single_value()-> None:
+def test_pattern_mode_single_value() -> None:
     """Тест с граничной максимальной границей: 9999 -> 9999 9999 9999 9999"""
     gen_max = card_number_generator(9999, 9999, mode="pattern")
     assert next(gen_max) == "9999 9999 9999 9999", "Некорректно сгенерирован номер для 9999 в режиме pattern"
@@ -136,7 +136,7 @@ def test_pattern_mode_single_value()-> None:
         next(gen_max)
 
 
-def test_sequential_mode_small_range()-> None:
+def test_sequential_mode_small_range() -> None:
     """Проверка классического режима"""
     gen = card_number_generator(1, 3, mode="sequential")
     assert next(gen) == "0000 0000 0000 0001"
@@ -146,13 +146,13 @@ def test_sequential_mode_small_range()-> None:
         next(gen)
 
 
-def test_invalid_range()-> None:
+def test_invalid_range() -> None:
     """Проверка ошибки при start > stop"""
     with pytest.raises(ValueError):
         list(card_number_generator(10, 5))
 
 
-def test_card_format_consistency()-> None:
+def test_card_format_consistency() -> None:
     """
     Проверяет корректность форматирования номеров карт.
     Критерии:

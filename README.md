@@ -64,24 +64,30 @@ poetry add --group dev pytest-cov
 12. Генератор card_number_generator, который выдает номера банковских карт в формате 
 XXXX XXXX XXXX XXXX, где X — цифра номера карты. Генератор может сгенерировать номера карт в заданном диапазоне от 
 0000 0000 0000 0001 до 9999 9999 9999 9999.
+13. Создаем новый модуль decorators. Этот модуль будет использоваться для размещения декораторов, включая декоратор 
+log, который будет автоматически логировать начало и конец выполнения функции, 
+а также ее результаты или возникшие ошибки
+
 
 ## Тестирование
 Все тесты расположены в папке tests. Сделаны тестирования с помощью assert, фикстур и параметеризации. 
 Тестирование расположены в файлах: test_filter_by_state.py, test_get_date.py, test_get_mask_account.py,
 test_get_mask_card_number.py, test_mask_account_card.py, test_sort_by_date.py, test_filter_by_currency
-запуск тестирвания всех тестов: введите в терминале pytest
+tests-decorators.py, запуск тестирвания всех тестов: введите в терминале pytest
 запуск процента покрытия: введите в терминале pytest --cov
 Итоговый результат тестирования:
 
 Name                                 Stmts   Miss  Cover
 --------------------------------------------------------
 src\__init__.py                          0      0   100%
+src\decorators.py                       37      4    89%
 src\generators.py                       35      3    91%
 src\masks.py                            20      0   100%
 src\processing.py                       12      0   100%
 src\widget.py                           34      1    97%
 test_main.py                             0      0   100%
 tests\__init__.py                        0      0   100%
+tests\test_decorators.py                91      2    98%
 tests\test_filter_by_currency.py        56      0   100%
 tests\test_filter_by_state.py           17      0   100%
 tests\test_get_date.py                  10      0   100%
@@ -90,7 +96,7 @@ tests\test_get_mask_card_number.py      12      1    92%
 tests\test_mask_account_card.py          5      0   100%
 tests\test_sort_by_date.py              24      0   100%
 --------------------------------------------------------
-TOTAL                                  233      5    98%
+TOTAL                                  361     11    97%
 
 
 ##  Лицензия:
