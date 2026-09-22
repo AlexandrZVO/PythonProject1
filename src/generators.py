@@ -62,25 +62,29 @@ transactions = [
 ]
 
 
-from typing import TypedDict, Generator
+from typing import Generator, TypedDict
+
 
 # Описываем структуру одной транзакции
 class Transaction(TypedDict):
     operationAmount: dict
 
+
 class CurrencyInfo(TypedDict):
     code: str
 
+
 class AmountData(TypedDict):
     currency: CurrencyInfo
+
 
 # Уточняем структуру, чтобы mypy понимал вложенность
 class TransactionStrict(TypedDict):
     operationAmount: AmountData
 
+
 def filter_by_currency(
-    transactions: list[TransactionStrict],
-    currency_code: str
+    transactions: list[TransactionStrict], currency_code: str
 ) -> Generator[TransactionStrict, None, None]:
     for tx in transactions:
         if (
@@ -90,7 +94,6 @@ def filter_by_currency(
             and tx["operationAmount"]["currency"]["code"] == currency_code
         ):
             yield tx
-
 
 
 # Создаём генератор
