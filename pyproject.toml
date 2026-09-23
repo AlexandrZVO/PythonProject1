@@ -25,8 +25,9 @@ dev = [
 ]
 
 [tool.mypy]
-mypy_path = ["src"]
-exclude = ["tests/"]
+python_version = "3.13"
+mypy_path = ["src"]       # <-- ГЛАВНОЕ: говорит mypy: "ищи модули ВНУТРИ папки src"
+exclude = ["tests/"]       # <-- ИСКЛЮЧАЕТ тесты, чтобы не мучиться с -> None
 disallow_untyped_defs = true
 no_implicit_optional = true
 warn_return_any = true
