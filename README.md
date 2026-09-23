@@ -1,4 +1,4 @@
-# Учебный проект по уроку 10.2
+# Учебный проект по уроку 12.1
 
 ## Создаем ветку разработки и ветку разработки текущего домашнего задания. Реализуем в ней выполнение функций :
 filter_by_state, sort_by_date, get_mask_card_number, get_mask_account, mask_account_card и get_date.
@@ -67,24 +67,32 @@ XXXX XXXX XXXX XXXX, где X — цифра номера карты. Генер
 13. Создаем новый модуль decorators. Этот модуль будет использоваться для размещения декораторов, включая декоратор 
 log, который будет автоматически логировать начало и конец выполнения функции, 
 а также ее результаты или возникшие ошибки
-
+14. Функция load_transactions, которая принимает на вход путь до JSON-файла и возвращает список словарей 
+с данными о финансовых транзакциях. Создан файл с данными о финансовых транзациях 
+operations.json.
+15. Функция get_exchange_rate,  которая принимает на вход транзакцию и возвращает сумму транзакции (
+amount в рублях, тип данных — float. 
+    
 
 ## Тестирование
 Все тесты расположены в папке tests. Сделаны тестирования с помощью assert, фикстур и параметеризации. 
 Тестирование расположены в файлах: test_filter_by_state.py, test_get_date.py, test_get_mask_account.py,
 test_get_mask_card_number.py, test_mask_account_card.py, test_sort_by_date.py, test_filter_by_currency
-tests-decorators.py, запуск тестирвания всех тестов: введите в терминале pytest
+tests-decorators.py, написаны тесты для новых функций, используйте Mock и patch.
+запуск тестирвания всех тестов: введите в терминале pytest
 запуск процента покрытия: введите в терминале pytest --cov
 Итоговый результат тестирования:
 
-Name                                 Stmts   Miss  Cover
+NName                                 Stmts   Miss  Cover
 --------------------------------------------------------
 src\__init__.py                          0      0   100%
 src\decorators.py                       37      4    89%
 src\generators.py                       35      3    91%
 src\masks.py                            20      0   100%
 src\processing.py                       12      0   100%
+src\utils.py                            11      0   100%
 src\widget.py                           34      1    97%
+test_env.py                             11      4    64%
 test_main.py                             0      0   100%
 tests\__init__.py                        0      0   100%
 tests\test_decorators.py                91      2    98%
@@ -94,9 +102,10 @@ tests\test_get_date.py                  10      0   100%
 tests\test_get_mask_account.py           8      0   100%
 tests\test_get_mask_card_number.py      12      1    92%
 tests\test_mask_account_card.py          5      0   100%
-tests\test_sort_by_date.py              24      0   100%
+tests\test_sort_by_date.py              22      0   100%
+tests\test_utils.py                     17      0   100%
 --------------------------------------------------------
-TOTAL                                  361     11    97%
+TOTAL                                  398     15    96%
 
 
 ##  Лицензия:
