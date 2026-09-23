@@ -1,3 +1,5 @@
+from typing import Generator, TypedDict
+
 transactions = [
     {
         "id": 939719570,
@@ -60,9 +62,6 @@ transactions = [
         "to": "Счет 14211924144426031657",
     },
 ]
-
-
-from typing import Generator, TypedDict
 
 
 # Описываем структуру одной транзакции

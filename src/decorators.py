@@ -1,6 +1,6 @@
-import time
-import sys
 import inspect
+import sys
+import time
 from functools import wraps
 from typing import Any, Callable, Optional
 
@@ -15,18 +15,13 @@ def log(filename: Optional[str] = None) -> Callable[[Callable[..., Any]], Callab
         def wrapper(*args: Any, **kwargs: Any) -> Any:
             bound_args = sig.bind(*args, **kwargs)
             bound_args.apply_defaults()
-            params_str = ", ".join(
-                f"{name}={value!r}" for name, value in bound_args.arguments.items()
-            )
+            params_str = ", ".join(f"{name}={value!r}" for name, value in bound_args.arguments.items())
 
             start_time = time.time()
             try:
                 result = func(*args, **kwargs)
                 duration = time.time() - start_time
-                log_msg = (
-                    f"START: {func.__name__}({params_str}) | "
-                    f"DURATION: {duration:.4f}s | RESULT: {result!r}"
-                )
+                log_msg = f"START: {func.__name__}({params_str}) | " f"DURATION: {duration:.4f}s | RESULT: {result!r}"
             except Exception as e:
                 duration = time.time() - start_time
                 log_msg = (
