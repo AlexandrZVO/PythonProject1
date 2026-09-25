@@ -1,4 +1,4 @@
-# Учебный проект по уроку 12.1
+# Учебный проект по уроку 12.2
 
 ## Создаем ветку разработки и ветку разработки текущего домашнего задания. Реализуем в ней выполнение функций :
 filter_by_state, sort_by_date, get_mask_card_number, get_mask_account, mask_account_card и get_date.
@@ -14,6 +14,12 @@ poetry shell
 pip install -r requirements.txt
 4. Установите pytest:
 poetry add --group dev pytest-cov
+5. from typing import Any, Dict, List
+6. import json
+7. from logging import FileHandler, Formatter
+8. from external_api import convert_to_rub
+9. from utils import load_transactions
+
 
 
 ## Использование: 
@@ -72,6 +78,7 @@ log, который будет автоматически логировать �
 operations.json.
 15. Функция get_exchange_rate,  которая принимает на вход транзакцию и возвращает сумму транзакции (
 amount в рублях, тип данных — float. 
+16. Создаы логеры для  модулей masks и masks:
     
 
 ## Тестирование
