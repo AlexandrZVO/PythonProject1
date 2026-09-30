@@ -40,19 +40,17 @@ def get_mask_card_number(card_number: str) -> str:
         last_four = digits[-4:]
         masked = f"{first_six[:4]} {first_six[4:6]}** **** {last_four}"
 
-        # Логирование успешного случая
         logger.info("Маска карты создана: %s", masked)
         return masked
 
     except Exception as e:
-        # Логирование ошибочного случая: уровень не ниже ERROR
         logger.error(
             "Ошибка в get_mask_card_number: %s, вход: %r",
             e,
             card_number,
             exc_info=True,
         )
-        return digits
+        raise
 
 
 def get_mask_account(card: str) -> str:
@@ -62,14 +60,8 @@ def get_mask_account(card: str) -> str:
             raise TypeError(f"Ожидалась строка, получен {type(card).__name__}")
 
         clean_card = card.replace(" ", "")
-
-        if len(clean_card) < 4:
-            logger.warning("Номер счета слишком короткий: %d символов", len(clean_card))
-            return clean_card
-
         masked = f"**{clean_card[-4:]}"
 
-        # Логирование успешного случая
         logger.info("Маска счета создана: %s", masked)
         return masked
 
@@ -80,7 +72,8 @@ def get_mask_account(card: str) -> str:
             card,
             exc_info=True,
         )
-        return card.replace(" ", "")
+        raise
+
 
 
 print(get_mask_account("7000792  289606361"))

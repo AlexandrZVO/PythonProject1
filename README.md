@@ -1,4 +1,4 @@
-# Учебный проект по уроку 12.2
+# Учебный проект по уроку 13.1
 
 ## Создаем ветку разработки и ветку разработки текущего домашнего задания. Реализуем в ней выполнение функций :
 filter_by_state, sort_by_date, get_mask_card_number, get_mask_account, mask_account_card и get_date.
@@ -19,6 +19,8 @@ poetry add --group dev pytest-cov
 7. from logging import FileHandler, Formatter
 8. from external_api import convert_to_rub
 9. from utils import load_transactions
+10. import pandas as pd
+11. import os
 
 
 
@@ -79,28 +81,34 @@ operations.json.
 15. Функция get_exchange_rate,  которая принимает на вход транзакцию и возвращает сумму транзакции (
 amount в рублях, тип данных — float. 
 16. Создаы логеры для  модулей masks и masks:
+17. Реализовано считывание финансовых операций из CSV- и XLSX-файлов из файлов  transactions.csv и 
+transactions_excel.xlsx. Написаны функции: read_transactions_from_csv и read_transactions_from_excel
+
+
     
 
 ## Тестирование
 Все тесты расположены в папке tests. Сделаны тестирования с помощью assert, фикстур и параметеризации. 
 Тестирование расположены в файлах: test_filter_by_state.py, test_get_date.py, test_get_mask_account.py,
 test_get_mask_card_number.py, test_mask_account_card.py, test_sort_by_date.py, test_filter_by_currency
-tests-decorators.py, написаны тесты для новых функций, используйте Mock и patch.
+tests-decorators.py, написаны тесты для новых функций read_transactions_from_csv и read_transactions_from_excel,
+используйте Mock и patch.
 запуск тестирвания всех тестов: введите в терминале pytest
 запуск процента покрытия: введите в терминале pytest --cov
 Итоговый результат тестирования:
 
-NName                                 Stmts   Miss  Cover
+
+Name                                 Stmts   Miss  Cover
 --------------------------------------------------------
 src\__init__.py                          0      0   100%
 src\decorators.py                       37      4    89%
 src\generators.py                       35      3    91%
-src\masks.py                            20      0   100%
+src\masks.py                            45      4    91%
 src\processing.py                       12      0   100%
-src\utils.py                            11      0   100%
+src\transactions.py                     35      6    83%
+src\utils.py                            24      6    75%
 src\widget.py                           34      1    97%
 test_env.py                             11      4    64%
-test_main.py                             0      0   100%
 tests\__init__.py                        0      0   100%
 tests\test_decorators.py                91      2    98%
 tests\test_filter_by_currency.py        56      0   100%
@@ -108,11 +116,13 @@ tests\test_filter_by_state.py           17      0   100%
 tests\test_get_date.py                  10      0   100%
 tests\test_get_mask_account.py           8      0   100%
 tests\test_get_mask_card_number.py      12      1    92%
+tests\test_main.py                       0      0   100%
 tests\test_mask_account_card.py          5      0   100%
 tests\test_sort_by_date.py              22      0   100%
+tests\test_transactions.py              92      0   100%
 tests\test_utils.py                     17      0   100%
 --------------------------------------------------------
-TOTAL                                  398     15    96%
+TOTAL                                  563     31    94%
 
 
 ##  Лицензия:
