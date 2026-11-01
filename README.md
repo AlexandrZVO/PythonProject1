@@ -21,7 +21,9 @@ poetry add --group dev pytest-cov
 9. from utils import load_transactions
 10. import pandas as pd
 11. import os
-
+12. import csv
+13. import json
+14. import re
 
 
 ## Использование: 
@@ -83,7 +85,8 @@ amount в рублях, тип данных — float.
 16. Создаы логеры для  модулей masks и masks:
 17. Реализовано считывание финансовых операций из CSV- и XLSX-файлов из файлов  transactions.csv и 
 transactions_excel.xlsx. Написаны функции: read_transactions_from_csv и read_transactions_from_excel
-
+18. Написана функция main в модуле main, которая отвечает за основную логику проекта
+с пользователем и связывает функциональности между собой.
 
     
 
@@ -92,38 +95,46 @@ transactions_excel.xlsx. Написаны функции: read_transactions_from
 Тестирование расположены в файлах: test_filter_by_state.py, test_get_date.py, test_get_mask_account.py,
 test_get_mask_card_number.py, test_mask_account_card.py, test_sort_by_date.py, test_filter_by_currency
 tests-decorators.py, написаны тесты для новых функций read_transactions_from_csv и read_transactions_from_excel,
-используйте Mock и patch.
+используйте Mock и patch, написаны тесты для модуля main.
 запуск тестирвания всех тестов: введите в терминале pytest
 запуск процента покрытия: введите в терминале pytest --cov
 Итоговый результат тестирования:
 
 
-Name                                 Stmts   Miss  Cover
---------------------------------------------------------
+Name                                 Stmts   Miss  Cover   Missing
+------------------------------------------------------------------
 src\__init__.py                          0      0   100%
-src\decorators.py                       37      4    89%
-src\generators.py                       35      3    91%
-src\masks.py                            45      4    91%
+src\data\__init__.py                     0      0   100%
+src\decorators.py                       37      4    89%   54-58
+src\external_api.py                     34      2    94%   17-18
+src\generators.py                       32      1    97%   140
+src\main.py                            195     72    63%   13, 55, 103-131, 146-229, 232-233, 296-297, 330-331, 335-337
+src\masks.py                            45      4    91%   60, 68-75
 src\processing.py                       12      0   100%
-src\transactions.py                     35      6    83%
-src\utils.py                            24      6    75%
-src\widget.py                           34      1    97%
-test_env.py                             11      4    64%
+src\transactions.py                     28      0   100%
+src\utils.py                            24      6    75%   37-50
+src\widget.py                           34      1    97%   18
+test_env.py                             11      4    64%   13-16
+test_main.py                             0      0   100%
 tests\__init__.py                        0      0   100%
-tests\test_decorators.py                91      2    98%
+tests\test_csv_loader.py                23      0   100%
+tests\test_decorators.py                91      2    98%   64, 151
+tests\test_excel_loader.py              28      3    89%   52-57
+tests\test_external_api.py              60      0   100%
 tests\test_filter_by_currency.py        56      0   100%
 tests\test_filter_by_state.py           17      0   100%
 tests\test_get_date.py                  10      0   100%
 tests\test_get_mask_account.py           8      0   100%
-tests\test_get_mask_card_number.py      12      1    92%
-tests\test_main.py                       0      0   100%
+tests\test_get_mask_card_number.py      14      1    93%   27
+tests\test_json_loader.py               20      0   100%
+tests\test_main.py                      49      0   100%
 tests\test_mask_account_card.py          5      0   100%
 tests\test_sort_by_date.py              22      0   100%
 tests\test_transactions.py              92      0   100%
 tests\test_utils.py                     17      0   100%
---------------------------------------------------------
-TOTAL                                  563     31    94%
-
+------------------------------------------------------------------
+TOTAL                                  964    100    90%
+Required test coverage of 80% reached. Total coverage: 89.63%
 
 ##  Лицензия:
 Проект распространяется под [лицензией MIT](LICENSE).

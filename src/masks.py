@@ -75,7 +75,6 @@ def get_mask_account(card: str) -> str:
         raise
 
 
-
 print(get_mask_account("7000792  289606361"))
 print(get_mask_account("73654108430135874305  "))
 print(get_mask_account("1" * 20))

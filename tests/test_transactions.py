@@ -8,8 +8,7 @@ from unittest.mock import MagicMock, patch
 import pandas as pd
 import pytest
 
-from src.transactions import (read_transactions_from_csv,
-                              read_transactions_from_excel)
+from src.transactions import read_transactions_from_csv, read_transactions_from_excel
 
 
 @pytest.fixture
