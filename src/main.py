@@ -138,7 +138,7 @@ def load_xlsx(path: str) -> List[Dict[str, Any]]:
         wb = load_workbook(filename=path, data_only=True)
         ws = wb.active  # Может вернуть None, если листов нет!
 
-        # 👇 ГЛАВНОЕ ИСПРАВЛЕНИЕ: проверяем, что лист действительно существует
+        # ГЛАВНОЕ ИСПРАВЛЕНИЕ: проверяем, что лист действительно существует
         if ws is None:
             print("В файле нет активных листов.")
             return []
