@@ -140,7 +140,7 @@ def load_xlsx(path: str) -> List[Dict[str, Any]]:
 
         # 👇 ГЛАВНОЕ ИСПРАВЛЕНИЕ: проверяем, что лист действительно существует
         if ws is None:
-            print("❌ В файле нет активных листов.")
+            print("В файле нет активных листов.")
             return []
 
         transactions: List[Dict[str, Any]] = []
@@ -169,7 +169,7 @@ def load_xlsx(path: str) -> List[Dict[str, Any]]:
 
         # Если критически важных колонок нет (например, id или amount), лучше выйти
         if idx_id is None or idx_amount is None:
-            print("⚠️ Не найдены обязательные колонки (id, amount). Проверьте структуру XLSX.")
+            print(" Не найдены обязательные колонки (id, amount). Проверьте структуру XLSX.")
             # Можно вернуть пустой список или попробовать прочитать как есть — зависит от твоей логики
             return []
 
@@ -229,10 +229,10 @@ def load_xlsx(path: str) -> List[Dict[str, Any]]:
         return transactions
 
     except FileNotFoundError:
-        print(f"❌ Файл не найден: {path}")
+        print(f"Файл не найден: {path}")
         return []
     except Exception as e:
-        print(f"❌ Ошибка чтения XLSX: {e}")
+        print(f" Ошибка чтения XLSX: {e}")
         return []
 
 
@@ -276,10 +276,10 @@ def load_csv(path: str) -> List[Dict[str, Any]]:
             return transactions
 
     except FileNotFoundError:
-        print(f"❌ Файл не найден: {path}")
+        print(f" Файл не найден: {path}")
         return []
     except Exception as e:
-        print(f"❌ Ошибка чтения CSV: {e}")
+        print(f" Ошибка чтения CSV: {e}")
         return []
 
 
@@ -293,7 +293,7 @@ def load_json(path: str) -> List[Dict[str, Any]]:
             data = json.load(f)
 
         if not isinstance(data, list):
-            print("❌ JSON должен содержать список транзакций")
+            print("JSON должен содержать список транзакций")
             return []
 
         transactions: List[Dict[str, Any]] = []
@@ -327,13 +327,13 @@ def load_json(path: str) -> List[Dict[str, Any]]:
         return transactions
 
     except FileNotFoundError:
-        print(f"❌ Файл не найден: {path}")
+        print(f"Файл не найден: {path}")
         return []
     except json.JSONDecodeError as e:
-        print(f"❌ Невалидный JSON: {e}")
+        print(f"Невалидный JSON: {e}")
         return []
     except Exception as e:
-        print(f"❌ Ошибка чтения JSON: {e}")
+        print(f"Ошибка чтения JSON: {e}")
         return []
 
 
