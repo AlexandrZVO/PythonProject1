@@ -1,28 +1,20 @@
-import pytest
 from io import StringIO
-from unittest.mock import patch, MagicMock
-from src.main import (
-    load_csv,
-    load_json,
-    load_xlsx,
-    filter_by_status,
-    filter_currency,
-    sort_transactions,
-    search_operations,
-    safe_float,
-)
+
+from src.main import filter_by_status, filter_currency, load_csv, safe_float, search_operations, sort_transactions
+
 
 # --- Тесты чистых функций (дают быстрый прирост покрытия) ---
-
 def test_safe_float_valid():
     assert safe_float(10) == 10.0
     assert safe_float("10,5") == 10.5
     assert safe_float("10.5") == 10.5
 
+
 def test_safe_float_invalid():
     assert safe_float(None) == 0.0
     assert safe_float("") == 0.0
     assert safe_float("abc") == 0.0
+
 
 def test_filter_by_status_valid():
     txs = [
@@ -34,10 +26,12 @@ def test_filter_by_status_valid():
     assert len(filtered) == 1
     assert filtered[0]["id"] == 1
 
+
 def test_filter_by_status_invalid():
     txs = [{"id": 1, "status": "EXECUTED"}]
     filtered = filter_by_status(txs, "INVALID")
     assert len(filtered) == 0
+
 
 def test_filter_currency_valid():
     txs = [
@@ -54,6 +48,7 @@ def test_filter_currency_valid():
     assert len(filtered) == 1
     assert filtered[0]["id"] == 1
 
+
 def test_sort_transactions_ascending():
     txs = [
         {"id": 1, "date": "2024-03-01"},
@@ -63,6 +58,7 @@ def test_sort_transactions_ascending():
     sorted_txs = sort_transactions(txs, ascending=True)
     dates = [t["date"] for t in sorted_txs]
     assert dates == ["2024-01-01", "2024-02-01", "2024-03-01"]
+
 
 def test_sort_transactions_descending():
     txs = [
@@ -74,6 +70,7 @@ def test_sort_transactions_descending():
     dates = [t["date"] for t in sorted_txs]
     assert dates == ["2024-03-01", "2024-02-01", "2024-01-01"]
 
+
 def test_search_operations_match():
     txs = [
         {"id": 1, "description": "Покупка продуктов"},
@@ -82,6 +79,7 @@ def test_search_operations_match():
     result = search_operations(txs, "покупка")
     assert len(result) == 1
     assert result[0]["id"] == 1
+
 
 def test_search_operations_no_match():
     txs = [
@@ -96,4 +94,3 @@ def test_load_csv_empty():
     csv_data = StringIO("id;state;date;amount;currency_code;description\n")
     transactions = load_csv(csv_data)
     assert len(transactions) == 0
-

@@ -1,7 +1,8 @@
-import pytest
+from unittest.mock import MagicMock, patch
+
 import requests  # <--- ЭТА СТРОКА БЫЛА ЗАБЫТА, ОНА РЕШАЕТ ПРОБЛЕМУ
-from unittest.mock import patch, MagicMock
-from src.external_api import get_exchange_rate, convert_to_rub
+
+from src.external_api import convert_to_rub, get_exchange_rate
 
 
 @patch("src.external_api.os.getenv")
