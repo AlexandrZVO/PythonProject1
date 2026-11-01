@@ -1,7 +1,6 @@
-# tests/test_json_loader.py
-import pytest
-from unittest.mock import patch
 import json
+from unittest.mock import patch
+
 from src.main import load_json
 
 
@@ -9,13 +8,13 @@ def test_handles_missing_amount_key_in_json():
     """Тест: если в JSON нет ключа amount, сумма становится 0.0."""
     raw_data = [
         {"id": 101, "state": "New"},  # Нет amount
-        {"id": 102, "amount": 250.75, "state": "Done"}  # Есть amount
+        {"id": 102, "amount": 250.75, "state": "Done"},  # Есть amount
     ]
 
     json_string = json.dumps(raw_data)
 
     # Чистый способ мока через with
-    with patch('builtins.open') as mock_open:
+    with patch("builtins.open") as mock_open:
         mock_file = mock_open.return_value.__enter__.return_value
         mock_file.read.return_value = json_string
 
@@ -32,7 +31,7 @@ def test_handles_invalid_json_format():
     """Тест: битый JSON не ломает программу, возвращает []."""
     broken_json = '[{"id": 1, "amount": 100}'  # Синтаксическая ошибка
 
-    with patch('builtins.open') as mock_open:
+    with patch("builtins.open") as mock_open:
         mock_file = mock_open.return_value.__enter__.return_value
         mock_file.read.return_value = broken_json
 

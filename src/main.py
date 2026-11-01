@@ -1,9 +1,10 @@
 """Точка входа в приложение."""
 
 import csv
+import json
 import re
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 # Для XLSX понадобится openpyxl, если будешь использовать этот пункт меню
 # pip install openpyxl
@@ -235,21 +236,16 @@ def load_xlsx(path: str) -> List[Dict[str, Any]]:
         return []
 
 
-import csv
-import json
-from typing import List, Dict, Any, Optional
-# Если у тебя есть openpyxl для Excel, оставь этот импорт
-# from openpyxl import load_workbook
-
 def safe_float(value: Optional[Any]) -> float:
     """Универсальная защита: превращает что угодно в float или 0.0"""
     if value is None:
         return 0.0
     try:
-        clean_val = str(value).strip().replace(',', '.')
+        clean_val = str(value).strip().replace(",", ".")
         return float(clean_val)
     except (ValueError, TypeError):
         return 0.0
+
 
 def load_csv(path: str) -> List[Dict[str, Any]]:
     """Загружает CSV с разделителем ';' и нормализует суммы."""
@@ -285,22 +281,6 @@ def load_csv(path: str) -> List[Dict[str, Any]]:
     except Exception as e:
         print(f"❌ Ошибка чтения CSV: {e}")
         return []
-
-
-import json
-from typing import List, Dict, Any, Optional
-
-
-def safe_float(value: Optional[Any]) -> float:
-    """Универсальная защита для суммы: строка, число, мусор -> float или 0.0"""
-    if value is None:
-        return 0.0
-    try:
-        # Приводим к строке, убираем пробелы, меняем запятую на точку
-        clean_val = str(value).strip().replace(',', '.')
-        return float(clean_val)
-    except (ValueError, TypeError):
-        return 0.0
 
 
 def load_json(path: str) -> List[Dict[str, Any]]:

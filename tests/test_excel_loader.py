@@ -1,12 +1,12 @@
-import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
 from src.main import load_xlsx
 
 
 class TestExcelLoader:
     """Группа тестов для функции загрузки Excel."""
 
-    @patch('src.main.load_workbook')
+    @patch("src.main.load_workbook")
     def test_returns_empty_list_if_no_sheet(self, mock_load):
         """Тест: если в файле нет активного листа, возвращаем пустой список."""
         mock_wb = MagicMock()
@@ -18,7 +18,7 @@ class TestExcelLoader:
         assert result == []
         mock_load.assert_called_once()
 
-    @patch('src.main.load_workbook', side_effect=ImportError)
+    @patch("src.main.load_workbook", side_effect=ImportError)
     def test_handles_missing_library_gracefully(self, mock_load):
         """Тест: если нет openpyxl, функция не падает, а возвращает пустой список."""
         result = load_xlsx("fake_path.xlsx")
@@ -28,12 +28,7 @@ class TestExcelLoader:
         # но пока достаточно проверить, что программа не упала и вернула []
 
 
-# tests/test_excel_loader.py
-from src.main import load_xlsx
-from unittest.mock import patch, MagicMock
-
-
-@patch('src.main.load_workbook')
+@patch("src.main.load_workbook")
 def test_load_xlsx_returns_empty_list_when_no_active_sheet(mock_load_workbook):
     # 1. Готовим мок: workbook, у которого active = None
     mock_wb = MagicMock()
@@ -60,42 +55,3 @@ def test_load_xlsx_returns_empty_list_when_no_active_sheet(mock_load_workbook):
 
         # Функция не должна падать, даже если данные кривые
         assert isinstance(result, list)
-        # В идеале там должна быть транзакция с amount=0.0, но хотя бы не пустой список из-за ошибки
-        # assert len(result) >= 1  # Раскомментируй, если хочешь, чтобы файл точно что-то вернул
-
-
-import csv
-from io import StringIO
-from unittest.mock import patch
-from src.main import load_csv  # замени на имя своей функции
-
-
-#class TestCsvLoader:
-
-#     def test_handles_empty_csv_gracefully(self):
-#         """Тест: пустой CSV не должен ломать программу."""
-#         # Эмулируем пустой файл через StringIO (это как файл в памяти)
-#         fake_file = StringIO("")
-#
-#         # Мокаем open(), чтобы он отдавал наш fake_file вместо реального диска
-#         with patch('builtins.open', return_value=fake_file):
-#             result = load_csv("dummy.csv")
-#
-#         assert result == []  # Пустой CSV -> пустой список
-#
-#     def test_converts_invalid_csv_amount_to_zero(self):
-#         """Тест: если в CSV вместо числа мусор — ставим 0.0."""
-#         csv_data = """id,amount,state
-# 101,N/A,New
-# 102,500.50,Done"""
-#
-#         fake_file = StringIO(csv_data)
-#
-#         with patch('builtins.open', return_value=fake_file):
-#             result = load_csv("dummy.csv")
-#
-#         assert len(result) == 2
-#         # Первая строка: amount был "N/A", должен стать 0.0
-#         assert result[0]["operationAmount"]["amount"] == 0.0
-#         # Вторая строка: всё ок
-#         assert result[1]["operationAmount"]["amount"] == 500.5

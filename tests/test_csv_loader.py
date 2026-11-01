@@ -1,10 +1,10 @@
-import pytest
-from unittest.mock import patch
 from io import StringIO
+from unittest.mock import patch
+
 from src.main import load_csv
 
-
 # Класс убираем совсем!
+
 
 def test_converts_invalid_csv_amount_to_zero():
     """Тест: мусор становится 0.0, нормальные числа парсятся."""
@@ -15,7 +15,7 @@ def test_converts_invalid_csv_amount_to_zero():
 
     fake_file = StringIO(csv_data)
 
-    with patch('builtins.open', return_value=fake_file):
+    with patch("builtins.open", return_value=fake_file):
         result = load_csv("dummy.csv")
 
     assert len(result) == 2
@@ -25,7 +25,7 @@ def test_converts_invalid_csv_amount_to_zero():
 
 def test_load_csv_returns_empty_list_on_missing_file():
     """Тест: если файла нет, возвращаем [] и не крашимся."""
-    with patch('builtins.open', side_effect=FileNotFoundError("No such file")):
+    with patch("builtins.open", side_effect=FileNotFoundError("No such file")):
         result = load_csv("non_existent_file.csv")
 
     assert result == []
@@ -39,16 +39,10 @@ bad_id;100.00;Done
 
     fake_file = StringIO(csv_data)
 
-    with patch('builtins.open', return_value=fake_file):
+    with patch("builtins.open", return_value=fake_file):
         result = load_csv("dummy.csv")
 
     # Мы не должны упасть. ID может быть строкой, это ок.
     assert len(result) == 2
     assert result[0]["operationAmount"]["amount"] == 100.0
     assert result[1]["operationAmount"]["amount"] == 200.5
-
-def test_load_csv_returns_empty_list_on_missing_file():
-    with patch('builtins.open', side_effect=FileNotFoundError):
-        result = load_csv("non_existent.csv")
-    assert result == []
-
