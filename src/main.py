@@ -192,7 +192,6 @@ def load_xlsx(path: str) -> List[Dict[str, Any]]:
 
             # Преобразование типов
             try:
-                # 👇 ЗАМЕНИ СТАРУЮ СТРОКУ НА ЭТОТ БЛОК 👇
                 if raw_amount is None:
                     amount_val = 0.0
                 elif isinstance(raw_amount, (int, float)):
@@ -236,29 +235,35 @@ def load_xlsx(path: str) -> List[Dict[str, Any]]:
         return []
 
 
-def load_csv(path: str) -> List[Dict[str, Any]]:
-    """
-    Загружает CSV с разделителем ';' и преобразует данные в структуру,
-    совместимую с остальной логикой.
-    """
+import csv
+import json
+from typing import List, Dict, Any, Optional
+# Если у тебя есть openpyxl для Excel, оставь этот импорт
+# from openpyxl import load_workbook
 
+def safe_float(value: Optional[Any]) -> float:
+    """Универсальная защита: превращает что угодно в float или 0.0"""
+    if value is None:
+        return 0.0
+    try:
+        clean_val = str(value).strip().replace(',', '.')
+        return float(clean_val)
+    except (ValueError, TypeError):
+        return 0.0
+
+def load_csv(path: str) -> List[Dict[str, Any]]:
+    """Загружает CSV с разделителем ';' и нормализует суммы."""
     try:
         with open(path, "r", encoding="utf-8", newline="") as f:
-            # delimiter=';' критически важен для твоего файла
             reader = csv.DictReader(f, delimiter=";")
             transactions: List[Dict[str, Any]] = []
 
             for row in reader:
-                # Явно приводим типы, чтобы mypy был спокоен
-                amount_val = row.get("amount", "0")
+                raw_amount = row.get("amount")
                 currency_code = row.get("currency_code", "UNK")
                 currency_name = row.get("currency_name", "Неизвестно")
 
-                # Безопасное преобразование суммы
-                try:
-                    amount_float = float(amount_val)
-                except (ValueError, TypeError):
-                    amount_float = 0.0
+                amount_val = safe_float(raw_amount)
 
                 tx: Dict[str, Any] = {
                     "id": row.get("id"),
@@ -266,7 +271,7 @@ def load_csv(path: str) -> List[Dict[str, Any]]:
                     "date": row.get("date"),
                     "description": row.get("description", "Без описания"),
                     "operationAmount": {
-                        "amount": amount_float,
+                        "amount": amount_val,
                         "currency": {"name": currency_name, "code": currency_code},
                     },
                 }
@@ -282,15 +287,85 @@ def load_csv(path: str) -> List[Dict[str, Any]]:
         return []
 
 
+import json
+from typing import List, Dict, Any, Optional
+
+
+def safe_float(value: Optional[Any]) -> float:
+    """Универсальная защита для суммы: строка, число, мусор -> float или 0.0"""
+    if value is None:
+        return 0.0
+    try:
+        # Приводим к строке, убираем пробелы, меняем запятую на точку
+        clean_val = str(value).strip().replace(',', '.')
+        return float(clean_val)
+    except (ValueError, TypeError):
+        return 0.0
+
+
+def load_json(path: str) -> List[Dict[str, Any]]:
+    """
+    Загружает JSON и приводит транзакции к единому формату.
+    Ожидает список объектов.
+    """
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+
+        if not isinstance(data, list):
+            print("❌ JSON должен содержать список транзакций")
+            return []
+
+        transactions: List[Dict[str, Any]] = []
+
+        for row in data:
+            # Получаем значения, ставим заглушки, если ключей нет
+            tx_id = row.get("id")
+            state = row.get("state", "Unknown")
+            date = row.get("date")
+            description = row.get("description", "Без описания")
+
+            currency_code = row.get("currency_code", "UNK")
+            currency_name = row.get("currency_name", "Неизвестно")
+            raw_amount = row.get("amount")  # Может быть None, строкой или числом
+
+            # Используем нашу универсальную функцию конвертации
+            amount_val = safe_float(raw_amount)
+
+            tx: Dict[str, Any] = {
+                "id": tx_id,
+                "state": state,
+                "date": date,
+                "description": description,
+                "operationAmount": {
+                    "amount": amount_val,
+                    "currency": {"name": currency_name, "code": currency_code},
+                },
+            }
+            transactions.append(tx)
+
+        return transactions
+
+    except FileNotFoundError:
+        print(f"❌ Файл не найден: {path}")
+        return []
+    except json.JSONDecodeError as e:
+        print(f"❌ Невалидный JSON: {e}")
+        return []
+    except Exception as e:
+        print(f"❌ Ошибка чтения JSON: {e}")
+        return []
+
+
 if __name__ == "__main__":
     main_logger = logging.getLogger("main")
     main_logger.info("Приложение запущено. Начинаем интерактивную обработку транзакций.")
 
     print("Программа: Привет! Добро пожаловать в программу работы с банковскими транзакциями.")
     print("Выберите необходимый пункт меню:")
-    print("1. Получить информацию о транзакциях из JSON-файла")
-    print("2. Получить информацию о транзакциях из CSV-файла")
-    print("3. Получить информацию о транзакциях из XLSX-файла")
+    print("1. Получить информацию о транзакциях из JSON-файла, путь data/operations.json ")
+    print("2. Получить информацию о транзакциях из CSV-файла, путь data/transactions.csv")
+    print("3. Получить информацию о транзакциях из XLSX-файла, путь data/transactions_excel.xlsx")
 
     # --- Выбор источника данных ---
     while True:

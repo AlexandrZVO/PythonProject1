@@ -30,3 +30,18 @@ def test_get_mask_card_number() -> None:
 def test_get_mask_card_number_len_card() -> None:
     # Тест, если не 16 номеров.
     assert get_mask_card_number("123456789123456789") == "123456789123456789", "Некорректная длина номера крты"
+
+def test_mask_card_with_empty_string():
+    from src.masks import get_mask_card_number  # или как у тебя называется функция
+    assert get_mask_card_number("") == ""  # или что там должно быть по твоей логике
+
+
+# def test_mask_card_number_with_edge_cases():
+#     from src.masks import get_mask_card_number
+#
+#     # Пустая строка
+#     assert get_mask_card_number("") == ""
+#     # Строка короче 4 символов (если твоя логика возвращает её как есть или маскирует нулями)
+#     assert len(get_mask_card_number("123")) <= 4  # или какой у тебя там ожидаемый результат
+#     # None (если функция это допускает)
+#     with pytest.raises(TypeError) or assert get_mask_card_number(None) ==...  # зависит от твоей логики
