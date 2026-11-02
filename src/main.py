@@ -5,6 +5,7 @@ import json
 import re
 from pathlib import Path
 from typing import Any, Dict, List, Optional
+from collections import Counter
 
 # Для XLSX понадобится openpyxl, если будешь использовать этот пункт меню
 # pip install openpyxl
@@ -337,6 +338,40 @@ def load_json(path: str) -> List[Dict[str, Any]]:
         return []
 
 
+def count_transaction_categories(transactions: List[Dict[str, Any]], categories: List[str]) -> Dict[str, int]:
+    """
+    Подсчитывает количество транзакций по заданным категориям на основе поля description.
+
+    Логика:
+    - Поиск по подстроке (регистронезависимо).
+    - Одна транзакция может попасть в несколько категорий, если описание содержит несколько ключевых слов.
+    - Все запрошенные категории гарантированно присутствуют в результате (даже если счётчик 0).
+
+    Параметры:
+        transactions: список транзакций в едином формате.
+        categories: список названий категорий (ключевые слова для поиска).
+
+    Возвращает:
+        dict: {название_категории: количество_операций}.
+    """
+    # Нормализуем категории для поиска (нижний регистр), но сохраняем оригинальные названия для ключей
+    normalized_keywords = [cat.lower() for cat in categories]
+
+    # Инициализируем Counter нулями для всех категорий — так они точно будут в итоговом словаре
+    counter = Counter({cat: 0 for cat in categories})
+
+    for tx in transactions:
+        # Получаем описание, приводим к строке и нижнему регистру
+        description = str(tx.get("description", "")).lower()
+
+        # Проверяем каждую категорию
+        for i, keyword in enumerate(normalized_keywords):
+            if keyword in description:
+                counter[categories[i]] += 1
+
+    return dict(counter)
+
+
 if __name__ == "__main__":
     main_logger = logging.getLogger("main")
     main_logger.info("Приложение запущено. Начинаем интерактивную обработку транзакций.")
@@ -452,3 +487,22 @@ if __name__ == "__main__":
             except Exception as e:
                 main_logger.error("Ошибка конвертации для транзакции %s: %s", tx.get("id"), e, exc_info=True)
                 print(f" #{tx.get('id')} Ошибка конвертации (см. лог)")
+
+    print("\nПрограмма: Хотите получить статистику по категориям операций? Да/Нет")
+    stats_choice = input("> ").strip().lower()
+    if stats_choice in {"да", "д", "yes", "y"}:
+        print("Программа: Введите названия категорий через запятую (например: перевод, покупка, открытие, снятие):")
+        categories_input = input("> ").strip()
+        if categories_input:
+            categories_list = [c.strip() for c in categories_input.split(",") if c.strip()]
+            category_counts = count_transaction_categories(transactions, categories_list)
+
+            print("\n--- Статистика по категориям ---")
+            total_count = sum(category_counts.values())
+            for cat, count in category_counts.items():
+                print(f"{cat}: {count}")
+            print(f"Всего учтено операций (с учётом пересечений): {total_count}")
+        else:
+            print("Программа: Пропуск подсчёта категорий.")
+    else:
+        print("Программа: Пропуск статистики по категориям.")
