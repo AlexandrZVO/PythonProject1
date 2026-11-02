@@ -1,6 +1,9 @@
 [run]
 source = src
 
+omit =
+    src/main.py
+
 [report]
 exclude_lines =
     if __name__ == .__main__.:
