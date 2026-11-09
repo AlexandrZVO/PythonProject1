@@ -33,6 +33,7 @@ def test_get_mask_card_number_len_card() -> None:
 
 
 def test_mask_card_with_empty_string():
-    from src.masks import get_mask_card_number  # или как у тебя называется функция
+    from src.masks import \
+        get_mask_card_number  # или как у тебя называется функция
 
     assert get_mask_card_number("") == ""  # или что там должно быть по твоей логике

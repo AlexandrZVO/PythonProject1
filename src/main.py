@@ -2,11 +2,11 @@
 
 import csv
 import json
-import re
 import logging
+import re
+from collections import Counter
 from logging import FileHandler, Formatter
 from pathlib import Path
-from collections import Counter
 from typing import Any, Dict, List, Optional
 
 # Для XLSX понадобится openpyxl: pip install openpyxl
@@ -306,9 +306,7 @@ def format_transaction_output(tx: Dict[str, Any]) -> str:
     return f"{date_str} {description}\nСумма: {amount} {currency}"
 
 
-def count_transaction_categories(
-    transactions: List[Dict[str, Any]], categories: List[str]
-) -> Dict[str, int]:
+def count_transaction_categories(transactions: List[Dict[str, Any]], categories: List[str]) -> Dict[str, int]:
     """
     Подсчитывает количество транзакций по заданным категориям на основе поля description.
 
