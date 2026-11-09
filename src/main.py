@@ -2,23 +2,18 @@
 
 import csv
 import json
+import logging
 import re
+from collections import Counter
+from logging import FileHandler, Formatter
 from pathlib import Path
 from typing import Any, Dict, List, Optional
-from collections import Counter
 
-# Для XLSX понадобится openpyxl, если будешь использовать этот пункт меню
-# pip install openpyxl
+# Для XLSX понадобится openpyxl: pip install openpyxl
 try:
     from openpyxl import load_workbook
 except ImportError:
-    pass
-
-import logging
-from logging import FileHandler, Formatter
-
-from external_api import convert_to_rub
-from utils import load_transactions
+    load_workbook = None
 
 
 # --- НАСТРОЙКА ЛОГИРОВАНИЯ ---
@@ -28,26 +23,214 @@ def setup_logging() -> None:
     date_format = "%Y-%m-%d %H:%M:%S"
     formatter = Formatter(fmt=log_format, datefmt=date_format)
 
-    # Логгер utils
-    utils_logger = logging.getLogger("utils")
-    utils_logger.setLevel(logging.DEBUG)
-    utils_handler = FileHandler("logs/utils.log", mode="w", encoding="utf-8")
-    utils_handler.setLevel(logging.DEBUG)
-    utils_handler.setFormatter(formatter)
-    if not utils_logger.handlers:
-        utils_logger.addHandler(utils_handler)
-
-    # Логгер masks
-    masks_logger = logging.getLogger("masks")
-    masks_logger.setLevel(logging.DEBUG)
-    masks_handler = FileHandler("logs/masks.log", mode="w", encoding="utf-8")
-    masks_handler.setLevel(logging.DEBUG)
-    masks_handler.setFormatter(formatter)
-    if not masks_logger.handlers:
-        masks_logger.addHandler(masks_handler)
+    for logger_name in ("utils", "masks"):
+        current_logger = logging.getLogger(logger_name)
+        current_logger.setLevel(logging.DEBUG)
+        if not current_logger.handlers:
+            handler = FileHandler(f"logs/{logger_name}.log", mode="w", encoding="utf-8")
+            handler.setLevel(logging.DEBUG)
+            handler.setFormatter(formatter)
+            current_logger.addHandler(handler)
 
 
 setup_logging()
+
+
+# --- Конвертация валют без запросов к API ---
+RATES_TO_RUB: Dict[str, float] = {
+    "RUB": 1.0,
+    "USD": 90.0,
+    "EUR": 100.0,
+    "GBP": 115.0,
+    "CNY": 12.5,
+}
+
+
+def convert_to_rub(amount: float, currency_code: str) -> float:
+    """Конвертирует сумму в рубли. Неизвестную валюту не роняет, а возвращает сумму как есть."""
+    code = str(currency_code or "").strip().upper()
+    if code in RATES_TO_RUB:
+        return round(amount * RATES_TO_RUB[code], 2)
+    return round(amount, 2)
+
+
+def safe_float(value: Optional[Any]) -> float:
+    """Универсальная защита: превращает что угодно в float или 0.0"""
+    if value is None:
+        return 0.0
+    try:
+        clean_val = str(value).strip().replace(",", ".")
+        return float(clean_val)
+    except (ValueError, TypeError):
+        return 0.0
+
+
+def load_json(path: str) -> List[Dict[str, Any]]:
+    """
+    Загружает JSON и приводит транзакции к единому формату.
+    Поддерживает оба формата:
+    1. вложенный: {"id", "state", "date", "description", "operationAmount": {"amount", "currency": {"name", "code"}}}
+    2. плоский:   {"id", "state", "date", "description", "amount", "currency_code", "currency_name"}
+    """
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+
+        if not isinstance(data, list):
+            print("JSON должен содержать список транзакций")
+            return []
+
+        transactions: List[Dict[str, Any]] = []
+
+        for row in data:
+            if not isinstance(row, dict):
+                continue
+
+            amount_data = row.get("operationAmount") or {}
+            currency_data = amount_data.get("currency") or {}
+
+            # Берём вложенный формат, если он есть; иначе — плоские поля
+            raw_amount = amount_data.get("amount", row.get("amount"))
+            currency_code = currency_data.get("code", row.get("currency_code", "UNK"))
+            currency_name = currency_data.get("name", row.get("currency_name", "Неизвестно"))
+
+            tx: Dict[str, Any] = {
+                "id": row.get("id"),
+                "state": row.get("state", "Unknown") or "Unknown",
+                "date": row.get("date") or "",
+                "description": row.get("description", "Без описания") or "Без описания",
+                "operationAmount": {
+                    "amount": safe_float(raw_amount),
+                    "currency": {
+                        "name": currency_name or "Неизвестно",
+                        "code": str(currency_code or "UNK").upper(),
+                    },
+                },
+            }
+            transactions.append(tx)
+
+        return transactions
+
+    except FileNotFoundError:
+        print(f"Файл не найден: {path}")
+        return []
+    except json.JSONDecodeError as e:
+        print(f"Невалидный JSON: {e}")
+        return []
+    except Exception as e:
+        print(f"Ошибка чтения JSON: {e}")
+        return []
+
+
+def load_csv(path: str) -> List[Dict[str, Any]]:
+    """Загружает CSV с разделителем ';' и нормализует суммы."""
+    try:
+        with open(path, "r", encoding="utf-8", newline="") as f:
+            reader = csv.DictReader(f, delimiter=";")
+            transactions: List[Dict[str, Any]] = []
+
+            for row in reader:
+                tx: Dict[str, Any] = {
+                    "id": row.get("id"),
+                    "state": row.get("state"),
+                    "date": row.get("date"),
+                    "description": row.get("description", "Без описания"),
+                    "operationAmount": {
+                        "amount": safe_float(row.get("amount")),
+                        "currency": {
+                            "name": row.get("currency_name", "Неизвестно"),
+                            "code": row.get("currency_code", "UNK"),
+                        },
+                    },
+                }
+                transactions.append(tx)
+
+            return transactions
+
+    except FileNotFoundError:
+        print(f"Файл не найден: {path}")
+        return []
+    except Exception as e:
+        print(f"Ошибка чтения CSV: {e}")
+        return []
+
+
+def load_xlsx(path: str) -> List[Dict[str, Any]]:
+    if load_workbook is None:
+        print("Библиотека openpyxl не установлена. Установите её: pip install openpyxl")
+        return []
+
+    try:
+        # data_only=True важно, чтобы брать значения из формул, а не сами формулы
+        wb = load_workbook(filename=path, data_only=True)
+        ws = wb.active
+
+        if ws is None:
+            print("В файле нет активных листов.")
+            return []
+
+        transactions: List[Dict[str, Any]] = []
+
+        # Заголовки из первой строки
+        header_row = [cell.value for cell in next(ws.iter_rows(min_row=1, max_row=1), [])]
+        headers = [str(h).strip().lower() if h is not None else "" for h in header_row]
+
+        def get_col_index(*names: str) -> Optional[int]:
+            for name in names:
+                if name in headers:
+                    return headers.index(name)
+            return None
+
+        idx_id = get_col_index("id")
+        idx_state = get_col_index("state", "status")
+        idx_date = get_col_index("date")
+        idx_amount = get_col_index("amount")
+        idx_currency_code = get_col_index("currency_code", "code")
+        idx_description = get_col_index("description")
+
+        if idx_id is None or idx_amount is None:
+            print("Не найдены обязательные колонки (id, amount). Проверьте структуру XLSX.")
+            return []
+
+        for row in ws.iter_rows(min_row=2, values_only=True):
+            if not row or all(cell is None for cell in row):
+                continue
+
+            def cell_value(idx: Optional[int], default: Any = "") -> Any:
+                if idx is None or idx >= len(row):
+                    return default
+                return row[idx] if row[idx] is not None else default
+
+            raw_id = cell_value(idx_id, None)
+            raw_state = cell_value(idx_state, "")
+            raw_date = cell_value(idx_date, "")
+            raw_amount = cell_value(idx_amount, 0)
+            raw_currency = cell_value(idx_currency_code, "UNK")
+            raw_desc = cell_value(idx_description, "Без описания")
+
+            tx: Dict[str, Any] = {
+                "id": raw_id,
+                "state": str(raw_state).strip() if raw_state else "",
+                "date": str(raw_date).strip() if raw_date else "",
+                "description": str(raw_desc).strip(),
+                "operationAmount": {
+                    "amount": safe_float(raw_amount),
+                    "currency": {
+                        "name": "Неизвестно",
+                        "code": str(raw_currency).strip().upper() if raw_currency else "UNK",
+                    },
+                },
+            }
+            transactions.append(tx)
+
+        return transactions
+
+    except FileNotFoundError:
+        print(f"Файл не найден: {path}")
+        return []
+    except Exception as e:
+        print(f"Ошибка чтения XLSX: {e}")
+        return []
 
 
 def search_operations(transactions: List[Dict], search_string: str) -> List[Dict]:
@@ -55,7 +238,7 @@ def search_operations(transactions: List[Dict], search_string: str) -> List[Dict
     if not search_string:
         return transactions
     pattern = re.compile(re.escape(search_string), re.IGNORECASE)
-    return [op for op in transactions if pattern.search(op.get("description", ""))]
+    return [op for op in transactions if pattern.search(str(op.get("description", "")))]
 
 
 def filter_by_status(transactions: List[Dict[str, Any]], status: str) -> List[Dict[str, Any]]:
@@ -67,11 +250,8 @@ def filter_by_status(transactions: List[Dict[str, Any]], status: str) -> List[Di
 
     result: List[Dict[str, Any]] = []
     for t in transactions:
-        # Используем or "" чтобы гарантировать, что current_status - это строка, а не None
-        current_status = t.get("status") or t.get("state") or ""
-
+        current_status = t.get("state") or t.get("status") or ""
         clean_status = str(current_status).strip().upper()
-
         if clean_status == target:
             result.append(t)
 
@@ -80,9 +260,7 @@ def filter_by_status(transactions: List[Dict[str, Any]], status: str) -> List[Di
 
 def sort_transactions(transactions: List[Dict], ascending: bool = True) -> List[Dict]:
     def get_date_key(t: Dict) -> str:
-        # В твоем JSON поле называется 'date'
-        date_val = t.get("date", "")
-        return str(date_val)
+        return str(t.get("date") or "")
 
     return sorted(transactions, key=get_date_key, reverse=not ascending)
 
@@ -91,9 +269,9 @@ def filter_currency(transactions: List[Dict], currency: str) -> List[Dict]:
     target_curr = currency.upper()
     result = []
     for t in transactions:
-        amount_data = t.get("operationAmount", {})
-        currency_data = amount_data.get("currency", {})
-        code = currency_data.get("code", "").upper()
+        amount_data = t.get("operationAmount", {}) or {}
+        currency_data = amount_data.get("currency", {}) or {}
+        code = str(currency_data.get("code", "") or "").upper()
 
         if code == target_curr:
             result.append(t)
@@ -116,255 +294,31 @@ def format_transaction_output(tx: Dict[str, Any]) -> str:
 
     description = tx.get("description", "Без описания")
 
-    amount_data = tx.get("operationAmount", {})
-    currency_data = amount_data.get("currency", {})
+    amount_data = tx.get("operationAmount", {}) or {}
+    currency_data = amount_data.get("currency", {}) or {}
 
-    # Безопасное получение суммы (по умолчанию 0.0)
     amount = amount_data.get("amount", 0.0)
     if not isinstance(amount, (int, float)):
         amount = 0.0
 
     currency = currency_data.get("code", "RUB")
 
-    line1 = f"{date_str} {description}"
-    line2 = f"Сумма: {amount} {currency}"
-
-    return f"{line1}\n{line2}"
-
-
-def load_xlsx(path: str) -> List[Dict[str, Any]]:
-    try:
-
-        # data_only=True важно, чтобы брать значения из формул, а не сами формулы
-        wb = load_workbook(filename=path, data_only=True)
-        ws = wb.active  # Может вернуть None, если листов нет!
-
-        # ГЛАВНОЕ ИСПРАВЛЕНИЕ: проверяем, что лист действительно существует
-        if ws is None:
-            print("В файле нет активных листов.")
-            return []
-
-        transactions: List[Dict[str, Any]] = []
-
-        # Получаем заголовки из первой строки
-        # ws.iter_rows() теперь безопасен, потому что мы уже проверили, что ws не None
-        header_row = [cell.value for cell in next(ws.iter_rows(min_row=1, max_row=1), [])]
-
-        # Нормализуем заголовки (убираем пробелы, приводим к нижнему регистру для удобства)
-        # Ожидаем примерно такие колонки: id, state, date, amount, currency_code и т.д.
-        headers = [str(h).strip().lower() if h else "" for h in header_row]
-
-        # Находим индексы нужных колонок (защита от отсутствия колонок)
-        def get_col_index(name: str) -> int | None:
-            try:
-                return headers.index(name)
-            except ValueError:
-                return None
-
-        idx_id = get_col_index("id")
-        idx_state = get_col_index("state") or get_col_index("status")
-        idx_date = get_col_index("date")
-        idx_amount = get_col_index("amount")
-        idx_currency_code = get_col_index("currency_code") or get_col_index("code")
-        idx_description = get_col_index("description")
-
-        # Если критически важных колонок нет (например, id или amount), лучше выйти
-        if idx_id is None or idx_amount is None:
-            print(" Не найдены обязательные колонки (id, amount). Проверьте структуру XLSX.")
-            # Можно вернуть пустой список или попробовать прочитать как есть — зависит от твоей логики
-            return []
-
-        # Читаем остальные строки
-        for row in ws.iter_rows(min_row=2, values_only=True):
-            # Защита от пустых строк в конце файла
-            if not row or all(cell is None for cell in row):
-                continue
-
-            # Безопасное получение значений по индексам
-            raw_id = row[idx_id] if idx_id < len(row) else None
-            raw_state = row[idx_state] if idx_state is not None and idx_state < len(row) else ""
-            raw_date = row[idx_date] if idx_date is not None and idx_date < len(row) else ""
-            raw_amount = row[idx_amount] if idx_amount < len(row) else 0
-            raw_currency = (
-                row[idx_currency_code] if idx_currency_code is not None and idx_currency_code < len(row) else "UNK"
-            )
-            raw_desc = (
-                row[idx_description] if idx_description is not None and idx_description < len(row) else "Без описания"
-            )
-
-            # Преобразование типов
-            try:
-                if raw_amount is None:
-                    amount_val = 0.0
-                elif isinstance(raw_amount, (int, float)):
-                    # Если это уже число (даже Decimal), просто приводим к float
-                    amount_val = float(raw_amount)
-                elif isinstance(raw_amount, str):
-                    # Если строка — пытаемся превратить в число
-                    try:
-                        amount_val = float(raw_amount.replace(",", "."))  # На случай, если там "10,5"
-                    except ValueError:
-                        amount_val = 0.0
-                else:
-                    # Если там дата, время или какой-то объект openpyxl — ставим 0
-                    amount_val = 0.0
-
-            except (ValueError, TypeError):
-                amount_val = 0.0
-
-            tx: Dict[str, Any] = {
-                "id": raw_id,
-                "state": str(raw_state).strip() if raw_state else "",
-                "date": str(raw_date).strip() if raw_date else "",
-                "description": str(raw_desc).strip(),
-                "operationAmount": {
-                    "amount": amount_val,
-                    "currency": {
-                        "name": "Неизвестно",
-                        "code": str(raw_currency).strip().upper() if raw_currency else "UNK",
-                    },
-                },
-            }
-            transactions.append(tx)
-
-        return transactions
-
-    except FileNotFoundError:
-        print(f"Файл не найден: {path}")
-        return []
-    except Exception as e:
-        print(f" Ошибка чтения XLSX: {e}")
-        return []
-
-
-def safe_float(value: Optional[Any]) -> float:
-    """Универсальная защита: превращает что угодно в float или 0.0"""
-    if value is None:
-        return 0.0
-    try:
-        clean_val = str(value).strip().replace(",", ".")
-        return float(clean_val)
-    except (ValueError, TypeError):
-        return 0.0
-
-
-def load_csv(path: str) -> List[Dict[str, Any]]:
-    """Загружает CSV с разделителем ';' и нормализует суммы."""
-    try:
-        with open(path, "r", encoding="utf-8", newline="") as f:
-            reader = csv.DictReader(f, delimiter=";")
-            transactions: List[Dict[str, Any]] = []
-
-            for row in reader:
-                raw_amount = row.get("amount")
-                currency_code = row.get("currency_code", "UNK")
-                currency_name = row.get("currency_name", "Неизвестно")
-
-                amount_val = safe_float(raw_amount)
-
-                tx: Dict[str, Any] = {
-                    "id": row.get("id"),
-                    "state": row.get("state"),
-                    "date": row.get("date"),
-                    "description": row.get("description", "Без описания"),
-                    "operationAmount": {
-                        "amount": amount_val,
-                        "currency": {"name": currency_name, "code": currency_code},
-                    },
-                }
-                transactions.append(tx)
-
-            return transactions
-
-    except FileNotFoundError:
-        print(f" Файл не найден: {path}")
-        return []
-    except Exception as e:
-        print(f" Ошибка чтения CSV: {e}")
-        return []
-
-
-def load_json(path: str) -> List[Dict[str, Any]]:
-    """
-    Загружает JSON и приводит транзакции к единому формату.
-    Ожидает список объектов.
-    """
-    try:
-        with open(path, "r", encoding="utf-8") as f:
-            data = json.load(f)
-
-        if not isinstance(data, list):
-            print("JSON должен содержать список транзакций")
-            return []
-
-        transactions: List[Dict[str, Any]] = []
-
-        for row in data:
-            # Получаем значения, ставим заглушки, если ключей нет
-            tx_id = row.get("id")
-            state = row.get("state", "Unknown")
-            date = row.get("date")
-            description = row.get("description", "Без описания")
-
-            currency_code = row.get("currency_code", "UNK")
-            currency_name = row.get("currency_name", "Неизвестно")
-            raw_amount = row.get("amount")  # Может быть None, строкой или числом
-
-            # Используем нашу универсальную функцию конвертации
-            amount_val = safe_float(raw_amount)
-
-            tx: Dict[str, Any] = {
-                "id": tx_id,
-                "state": state,
-                "date": date,
-                "description": description,
-                "operationAmount": {
-                    "amount": amount_val,
-                    "currency": {"name": currency_name, "code": currency_code},
-                },
-            }
-            transactions.append(tx)
-
-        return transactions
-
-    except FileNotFoundError:
-        print(f"Файл не найден: {path}")
-        return []
-    except json.JSONDecodeError as e:
-        print(f"Невалидный JSON: {e}")
-        return []
-    except Exception as e:
-        print(f"Ошибка чтения JSON: {e}")
-        return []
+    return f"{date_str} {description}\nСумма: {amount} {currency}"
 
 
 def count_transaction_categories(transactions: List[Dict[str, Any]], categories: List[str]) -> Dict[str, int]:
     """
     Подсчитывает количество транзакций по заданным категориям на основе поля description.
 
-    Логика:
     - Поиск по подстроке (регистронезависимо).
-    - Одна транзакция может попасть в несколько категорий, если описание содержит несколько ключевых слов.
-    - Все запрошенные категории гарантированно присутствуют в результате (даже если счётчик 0).
-
-    Параметры:
-        transactions: список транзакций в едином формате.
-        categories: список названий категорий (ключевые слова для поиска).
-
-    Возвращает:
-        dict: {название_категории: количество_операций}.
+    - Одна транзакция может попасть в несколько категорий.
+    - Все запрошенные категории гарантированно присутствуют в результате.
     """
-    # Нормализуем категории для поиска (нижний регистр), но сохраняем оригинальные названия для ключей
     normalized_keywords = [cat.lower() for cat in categories]
-
-    # Инициализируем Counter нулями для всех категорий — так они точно будут в итоговом словаре
     counter = Counter({cat: 0 for cat in categories})
 
     for tx in transactions:
-        # Получаем описание, приводим к строке и нижнему регистру
         description = str(tx.get("description", "")).lower()
-
-        # Проверяем каждую категорию
         for i, keyword in enumerate(normalized_keywords):
             if keyword in description:
                 counter[categories[i]] += 1
@@ -378,9 +332,9 @@ if __name__ == "__main__":
 
     print("Программа: Привет! Добро пожаловать в программу работы с банковскими транзакциями.")
     print("Выберите необходимый пункт меню:")
-    print("1. Получить информацию о транзакциях из JSON-файла, путь data/operations.json ")
-    print("2. Получить информацию о транзакциях из CSV-файла, путь data/transactions.csv")
-    print("3. Получить информацию о транзакциях из XLSX-файла, путь data/transactions_excel.xlsx")
+    print("1. Получить информацию о транзакциях из JSON-файла, путь: data/operations.json")
+    print("2. Получить информацию о транзакциях из CSV-файла, путь: data/transactions.csv")
+    print("3. Получить информацию о транзакциях из XLSX-файла, путь: data/transactions_excel.xlsx")
 
     # --- Выбор источника данных ---
     while True:
@@ -394,14 +348,13 @@ if __name__ == "__main__":
     if not path.exists():
         print(f"Файл не найден: {path}")
         main_logger.error("Файл не найден по пути: %s", path)
-        exit(1)
+        raise SystemExit(1)
 
     transactions: List[Dict] = []
 
     if choice == "1":
         print("Программа: Для обработки выбран JSON-файл.")
-        # Используем твою существующую функцию загрузки
-        transactions = load_transactions(str(path))
+        transactions = load_json(str(path))
     elif choice == "2":
         print("Программа: Для обработки выбран CSV-файл.")
         transactions = load_csv(str(path))
@@ -410,9 +363,9 @@ if __name__ == "__main__":
         transactions = load_xlsx(str(path))
 
     if not transactions:
-        print("️ Файл пуст или не удалось загрузить транзакции.")
+        print("Файл пуст или не удалось загрузить транзакции.")
         main_logger.warning("Список транзакций пуст после загрузки.")
-        exit(0)
+        raise SystemExit(0)
 
     main_logger.info(f"Загружено транзакций: {len(transactions)}")
 
@@ -468,25 +421,18 @@ if __name__ == "__main__":
     else:
         print(f"\nВсего банковских операций в выборке: {len(transactions)}\n")
         for tx in transactions:
-            # Тут мы используем твой старый код конвертации, если нужно,
-            # но вывод делаем через новый форматтер, чтобы соответствовать ТЗ
+            print(format_transaction_output(tx))
+            print()  # Пустая строка между операциями
 
-            amount_data = tx.get("operationAmount", {})
+            amount_data = tx.get("operationAmount", {}) or {}
             amount = float(amount_data.get("amount", 0))
-            currency_data = amount_data.get("currency", {})
-            currency = currency_data.get("code", "RUB")
+            currency = (amount_data.get("currency", {}) or {}).get("code", "RUB")
 
             try:
                 rub = convert_to_rub(amount, currency)
-                # Если нужна конвертация в выводе — раскомментируй строку ниже вместо format_transaction_output
-                # print(f"{format_transaction_output(tx)}\nКонвертировано в RUB: {rub}")
-
-                print(format_transaction_output(tx))
-                print()  # Пустая строка между операциями
-
+                main_logger.debug("Конвертация выполнена: %s %s -> %s RUB", amount, currency, rub)
             except Exception as e:
                 main_logger.error("Ошибка конвертации для транзакции %s: %s", tx.get("id"), e, exc_info=True)
-                print(f" #{tx.get('id')} Ошибка конвертации (см. лог)")
 
     print("\nПрограмма: Хотите получить статистику по категориям операций? Да/Нет")
     stats_choice = input("> ").strip().lower()

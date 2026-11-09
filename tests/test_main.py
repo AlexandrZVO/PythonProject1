@@ -1,6 +1,7 @@
 from io import StringIO
 
-from src.main import filter_by_status, filter_currency, load_csv, safe_float, search_operations, sort_transactions
+from src.main import (filter_by_status, filter_currency, load_csv, safe_float,
+                      search_operations, sort_transactions)
 
 
 # --- Тесты чистых функций (дают быстрый прирост покрытия) ---
